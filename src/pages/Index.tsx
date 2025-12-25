@@ -6,6 +6,7 @@ import {
   CheckCircle,
   Clock,
   Activity,
+  Zap,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { MetricCard } from "@/components/MetricCard";
@@ -79,13 +80,20 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Background gradient */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,hsl(0_72%_51%/0.08),transparent_50%)] pointer-events-none" />
+      
       <Header />
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="relative container mx-auto px-6 py-8">
         {/* Hero Section */}
         <div className="mb-10">
-          <h2 className="text-3xl font-bold text-foreground mb-2">
-            Dashboard
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="w-5 h-5 text-primary" />
+            <span className="text-sm text-primary font-medium">Live Dashboard</span>
+          </div>
+          <h2 className="text-3xl font-bold text-foreground mb-2 tracking-tight">
+            Pipeline Overview
           </h2>
           <p className="text-muted-foreground">
             Monitor and manage your CI/CD pipelines with Minikube & DockerHub
@@ -93,7 +101,7 @@ export default function Index() {
         </div>
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <MetricCard
             title="Total Deployments"
             value="247"
@@ -134,11 +142,13 @@ export default function Index() {
         </div>
 
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Pipelines */}
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-              <GitBranch className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <GitBranch className="w-4 h-4 text-primary" />
+              </div>
               Recent Pipelines
             </h3>
             <div className="space-y-4">
@@ -150,8 +160,10 @@ export default function Index() {
 
           {/* Logs */}
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Clock className="w-4 h-4 text-primary" />
+              </div>
               Live Deployment Logs
             </h3>
             <TerminalOutput logs={mockLogs} />

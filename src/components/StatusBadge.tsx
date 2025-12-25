@@ -10,25 +10,25 @@ interface StatusBadgeProps {
 
 const statusConfig = {
   success: {
-    bg: "bg-success/20",
+    bg: "bg-success/10",
     text: "text-success",
     dot: "bg-success",
     label: "Success",
   },
   running: {
-    bg: "bg-primary/20",
+    bg: "bg-primary/10",
     text: "text-primary",
     dot: "bg-primary",
     label: "Running",
   },
   pending: {
-    bg: "bg-warning/20",
-    text: "text-warning",
-    dot: "bg-warning",
+    bg: "bg-muted",
+    text: "text-muted-foreground",
+    dot: "bg-muted-foreground",
     label: "Pending",
   },
   failed: {
-    bg: "bg-destructive/20",
+    bg: "bg-destructive/10",
     text: "text-destructive",
     dot: "bg-destructive",
     label: "Failed",
@@ -41,7 +41,7 @@ export function StatusBadge({ status, label, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium font-mono",
+        "inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium",
         config.bg,
         config.text,
         className
@@ -49,9 +49,9 @@ export function StatusBadge({ status, label, className }: StatusBadgeProps) {
     >
       <span
         className={cn(
-          "w-2 h-2 rounded-full",
+          "w-1.5 h-1.5 rounded-full status-indicator",
           config.dot,
-          status === "running" && "animate-pulse"
+          status === "running" && "active"
         )}
       />
       {label || config.label}
