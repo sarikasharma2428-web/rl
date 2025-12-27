@@ -25,9 +25,22 @@ pipeline {
 
         stage('Checkout') {
             steps {
+                script {
+                    // Notify stage started
+                    sh """
+                        curl -X POST ${BACKEND_URL}/jenkins/stage \
+                            -H "Content-Type: application/json" \
+                            -d '{"stage_name": "Checkout", "status": "running"}' || true
+                    """
+                }
                 checkout scm
                 script {
+                    // Notify stage completed
                     sh """
+                        curl -X POST ${BACKEND_URL}/jenkins/stage \
+                            -H "Content-Type: application/json" \
+                            -d '{"stage_name": "Checkout", "status": "success"}' || true
+                        
                         curl -X POST ${BACKEND_URL}/deployments/event \
                             -H "Content-Type: application/json" \
                             -d '{"event_type": "checkout", "status": "success", "details": {"branch": "${GIT_BRANCH}"}}' || true
@@ -38,12 +51,23 @@ pipeline {
 
         stage('Run Tests') {
             steps {
+                script {
+                    sh """
+                        curl -X POST ${BACKEND_URL}/jenkins/stage \
+                            -H "Content-Type: application/json" \
+                            -d '{"stage_name": "Test", "status": "running"}' || true
+                    """
+                }
                 dir('autodeploy/app') {
                     sh 'pip install -r requirements.txt || pip3 install -r requirements.txt'
                     sh 'python -m pytest ../tests/ -v || python3 -m pytest ../tests/ -v'
                 }
                 script {
                     sh """
+                        curl -X POST ${BACKEND_URL}/jenkins/stage \
+                            -H "Content-Type: application/json" \
+                            -d '{"stage_name": "Test", "status": "success"}' || true
+                        
                         curl -X POST ${BACKEND_URL}/deployments/event \
                             -H "Content-Type: application/json" \
                             -d '{"event_type": "test", "status": "success", "details": {"tests_passed": true}}' || true
@@ -54,11 +78,22 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
+                script {
+                    sh """
+                        curl -X POST ${BACKEND_URL}/jenkins/stage \
+                            -H "Content-Type: application/json" \
+                            -d '{"stage_name": "Build", "status": "running"}' || true
+                    """
+                }
                 dir('autodeploy/docker') {
                     sh "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -t ${DOCKER_IMAGE}:latest -f Dockerfile .."
                 }
                 script {
                     sh """
+                        curl -X POST ${BACKEND_URL}/jenkins/stage \
+                            -H "Content-Type: application/json" \
+                            -d '{"stage_name": "Build", "status": "success"}' || true
+                        
                         curl -X POST ${BACKEND_URL}/deployments/event \
                             -H "Content-Type: application/json" \
                             -d '{"event_type": "build", "status": "success", "details": {"image": "${DOCKER_IMAGE}:${BUILD_NUMBER}"}}' || true
@@ -69,6 +104,13 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
+                script {
+                    sh """
+                        curl -X POST ${BACKEND_URL}/jenkins/stage \
+                            -H "Content-Type: application/json" \
+                            -d '{"stage_name": "Push", "status": "running"}' || true
+                    """
+                }
                 // Using credential ID: dockerhub (configured in Jenkins)
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
@@ -78,6 +120,10 @@ pipeline {
                 }
                 script {
                     sh """
+                        curl -X POST ${BACKEND_URL}/jenkins/stage \
+                            -H "Content-Type: application/json" \
+                            -d '{"stage_name": "Push", "status": "success"}' || true
+                        
                         curl -X POST ${BACKEND_URL}/deployments/event \
                             -H "Content-Type: application/json" \
                             -d '{"event_type": "push", "status": "success", "details": {"registry": "DockerHub", "image": "${DOCKER_IMAGE}:${BUILD_NUMBER}"}}' || true
@@ -88,6 +134,13 @@ pipeline {
 
         stage('Deploy to Minikube') {
             steps {
+                script {
+                    sh """
+                        curl -X POST ${BACKEND_URL}/jenkins/stage \
+                            -H "Content-Type: application/json" \
+                            -d '{"stage_name": "Deploy", "status": "running"}' || true
+                    """
+                }
                 // Update deployment with new image
                 sh """
                     kubectl set image deployment/autodeployx-app \
@@ -102,9 +155,13 @@ pipeline {
                 
                 script {
                     sh """
+                        curl -X POST ${BACKEND_URL}/jenkins/stage \
+                            -H "Content-Type: application/json" \
+                            -d '{"stage_name": "Deploy", "status": "success"}' || true
+                        
                         curl -X POST ${BACKEND_URL}/deployments/event \
                             -H "Content-Type: application/json" \
-                            -d '{"event_type": "deploy", "status": "success", "details": {"cluster": "minikube", "namespace": "default", "image": "${DOCKER_IMAGE}:${BUILD_NUMBER}"}}' || true
+                            -d '{"event_type": "deploy", "status": "success", "details": {"cluster": "minikube", "namespace": "default", "version": "${BUILD_NUMBER}"}}' || true
                     """
                 }
             }

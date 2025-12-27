@@ -7,6 +7,8 @@ import {
   Activity,
   Server,
   History,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
@@ -26,11 +28,10 @@ import {
   useMetrics, 
   useLogs, 
   usePipelines,
-  useCurrentPipeline,
   useDockerImages,
-  useDeploymentInfo,
   useHistoryStats,
 } from "@/hooks/useMetrics";
+import { useAutoDeployWebSocket } from "@/hooks/useWebSocket";
 
 // Fallback data when backend is not connected
 const fallbackPipeline = {
@@ -86,19 +87,35 @@ const fallbackHistory = {
 export default function Index() {
   const [showConfigFiles, setShowConfigFiles] = useState(false);
   
-  // Real-time data hooks with polling
-  const { metrics, loading: metricsLoading, isConnected, refetch: refetchMetrics } = useMetrics(5000);
-  const { logs, loading: logsLoading } = useLogs(3000, 20);
-  const { pipeline: currentPipeline } = useCurrentPipeline(2000);
-  const { images: dockerImages, repository: dockerRepo } = useDockerImages(10000);
-  const { deployment } = useDeploymentInfo(5000);
-  const { history } = useHistoryStats(10000);
+  // 🔥 WebSocket for real-time updates (instant, no polling)
+  const { 
+    isConnected: wsConnected,
+    currentPipeline: wsPipeline,
+    kubernetes: wsKubernetes,
+    recentLogs: wsLogs,
+    requestRefresh,
+  } = useAutoDeployWebSocket();
+  
+  // Fallback polling hooks (used when WebSocket not available or for initial data)
+  const { metrics, loading: metricsLoading, isConnected: httpConnected, refetch: refetchMetrics } = useMetrics(10000); // Reduced polling since WS handles real-time
+  const { logs: httpLogs, loading: logsLoading } = useLogs(10000, 20);
+  const { images: dockerImages, repository: dockerRepo } = useDockerImages(30000); // Less frequent since WS handles updates
+  const { history } = useHistoryStats(30000);
 
-  // Get display data with fallbacks
+  // Combined connection status (WebSocket preferred)
+  const isConnected = wsConnected || httpConnected;
+
+  // Use WebSocket data if available, fallback to HTTP polling
   const displayPipeline = useMemo(() => {
-    if (!isConnected || !currentPipeline) return fallbackPipeline;
-    return currentPipeline;
-  }, [isConnected, currentPipeline]);
+    if (wsPipeline && wsPipeline.pipelineName) return wsPipeline;
+    return fallbackPipeline;
+  }, [wsPipeline]);
+
+  // Use WebSocket logs if available, fallback to HTTP logs
+  const displayLogs = useMemo(() => {
+    if (wsLogs && wsLogs.length > 0) return wsLogs;
+    return httpLogs;
+  }, [wsLogs, httpLogs]);
 
   const displayDocker = useMemo(() => {
     if (!isConnected) return fallbackDocker;
@@ -112,9 +129,9 @@ export default function Index() {
   }, [isConnected, dockerImages, dockerRepo, metrics]);
 
   const displayDeployment = useMemo(() => {
-    if (!isConnected || !deployment) return fallbackDeployment;
-    return deployment;
-  }, [isConnected, deployment]);
+    if (wsKubernetes) return wsKubernetes;
+    return fallbackDeployment;
+  }, [wsKubernetes]);
 
   const displayHistory = useMemo(() => {
     if (!isConnected || !history) return fallbackHistory;
@@ -147,13 +164,24 @@ export default function Index() {
             </p>
           </div>
 
-          {/* Connection Status */}
+          {/* Connection Status with WebSocket indicator */}
           <div className="flex justify-center mb-8">
-            <ConnectionStatus
-              isConnected={isConnected}
-              lastUpdated={lastUpdated}
-              onRefresh={refetchMetrics}
-            />
+            <div className="flex items-center gap-4">
+              <ConnectionStatus
+                isConnected={isConnected}
+                lastUpdated={lastUpdated}
+                onRefresh={() => {
+                  refetchMetrics();
+                  requestRefresh();
+                }}
+              />
+              {wsConnected && (
+                <div className="flex items-center gap-1.5 text-xs text-emerald-500">
+                  <Wifi className="w-3.5 h-3.5" />
+                  <span>Live</span>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -299,12 +327,12 @@ export default function Index() {
                 <div className="flex items-center gap-3 mb-4">
                   <Activity className="w-5 h-5 text-primary" />
                   <h3 className="font-display text-sm tracking-[0.15em] text-foreground">
-                    LIVE LOGS
+                    LIVE LOGS {wsConnected && <span className="text-emerald-500 text-xs">(Real-time)</span>}
                   </h3>
                 </div>
                 <TerminalOutput 
-                  logs={logs} 
-                  loading={logsLoading}
+                  logs={displayLogs} 
+                  loading={logsLoading && !wsConnected}
                   disconnected={!isConnected}
                 />
               </div>
