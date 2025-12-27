@@ -1,3 +1,4 @@
+import React, { forwardRef } from "react";
 import { Server, Database, Container, Globe, Box, ArrowRight, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -9,43 +10,47 @@ interface NodeProps {
   role?: string;
 }
 
-function TopologyNode({ icon, label, status, details, role }: NodeProps) {
-  return (
-    <div className="flex flex-col items-center p-5 bg-card border border-border/30 group card-hover cursor-pointer">
-      {/* Top accent */}
-      <div className={cn(
-        "w-8 h-0.5 -mt-5 mb-4",
-        status === "healthy" && "bg-success",
-        status === "warning" && "bg-warning",
-        status === "error" && "bg-destructive"
-      )} />
-      
-      <div className={cn(
-        "p-4 border mb-3 transition-all group-hover:scale-110",
-        status === "healthy" && "border-success/30 text-success",
-        status === "warning" && "border-warning/30 text-warning",
-        status === "error" && "border-destructive/30 text-destructive"
-      )}>
-        {icon}
+const TopologyNode = forwardRef<HTMLDivElement, NodeProps>(
+  ({ icon, label, status, details, role }, ref) => {
+    return (
+      <div ref={ref} className="flex flex-col items-center p-5 bg-card border border-border/30 group card-hover cursor-pointer">
+        {/* Top accent */}
+        <div className={cn(
+          "w-8 h-0.5 -mt-5 mb-4",
+          status === "healthy" && "bg-success",
+          status === "warning" && "bg-warning",
+          status === "error" && "bg-destructive"
+        )} />
+        
+        <div className={cn(
+          "p-4 border mb-3 transition-all group-hover:scale-110",
+          status === "healthy" && "border-success/30 text-success",
+          status === "warning" && "border-warning/30 text-warning",
+          status === "error" && "border-destructive/30 text-destructive"
+        )}>
+          {icon}
+        </div>
+        
+        <span className="font-display text-xs tracking-[0.15em] text-foreground">{label.toUpperCase()}</span>
+        {details && (
+          <span className="text-[10px] text-muted-foreground mt-1">{details}</span>
+        )}
+        {role && (
+          <span className="text-[9px] text-primary/70 mt-0.5 italic">{role}</span>
+        )}
+        
+        <div className={cn(
+          "w-2 h-2 mt-3 status-indicator",
+          status === "healthy" && "bg-success active",
+          status === "warning" && "bg-warning active",
+          status === "error" && "bg-destructive active"
+        )} />
       </div>
-      
-      <span className="font-display text-xs tracking-[0.15em] text-foreground">{label.toUpperCase()}</span>
-      {details && (
-        <span className="text-[10px] text-muted-foreground mt-1">{details}</span>
-      )}
-      {role && (
-        <span className="text-[9px] text-primary/70 mt-0.5 italic">{role}</span>
-      )}
-      
-      <div className={cn(
-        "w-2 h-2 mt-3 status-indicator",
-        status === "healthy" && "bg-success active",
-        status === "warning" && "bg-warning active",
-        status === "error" && "bg-destructive active"
-      )} />
-    </div>
-  );
-}
+    );
+  }
+);
+
+TopologyNode.displayName = "TopologyNode";
 
 function FlowArrow({ label }: { label: string }) {
   return (
