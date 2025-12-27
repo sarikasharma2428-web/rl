@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { X, Copy, Check, FileCode, Download, FolderOpen } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -1472,7 +1472,7 @@ interface ConfigFilesModalProps {
   onClose: () => void;
 }
 
-export function ConfigFilesModal({ isOpen, onClose }: ConfigFilesModalProps) {
+export const ConfigFilesModal = forwardRef<HTMLDivElement, ConfigFilesModalProps>(function ConfigFilesModal({ isOpen, onClose }, ref) {
   const [selectedFile, setSelectedFile] = useState(configFiles[0]);
   const [copied, setCopied] = useState(false);
   const [activeCategory, setActiveCategory] = useState("app");
@@ -1661,4 +1661,6 @@ export function ConfigFilesModal({ isOpen, onClose }: ConfigFilesModalProps) {
       </div>
     </div>
   );
-}
+});
+
+ConfigFilesModal.displayName = "ConfigFilesModal";
