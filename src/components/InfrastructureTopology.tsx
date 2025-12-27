@@ -122,8 +122,60 @@ export function InfrastructureTopology() {
           />
         </div>
 
+        {/* JENKINS - What It Does (Interview Ready) */}
+        <div className="max-w-4xl mx-auto mt-8 p-6 bg-primary/5 border-2 border-primary/30">
+          <h3 className="font-display text-sm tracking-[0.15em] text-primary mb-4 text-center">
+            🔧 JENKINS DOES 4 THINGS ONLY
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-4">
+            <div className="p-3 bg-card border border-primary/20 text-center">
+              <p className="text-primary font-bold text-lg mb-1">1</p>
+              <p className="text-foreground font-medium">Pull Code</p>
+              <p className="text-muted-foreground text-[10px]">from GitHub</p>
+            </div>
+            <div className="p-3 bg-card border border-primary/20 text-center">
+              <p className="text-primary font-bold text-lg mb-1">2</p>
+              <p className="text-foreground font-medium">Build Image</p>
+              <p className="text-muted-foreground text-[10px]">docker build</p>
+            </div>
+            <div className="p-3 bg-card border border-primary/20 text-center">
+              <p className="text-primary font-bold text-lg mb-1">3</p>
+              <p className="text-foreground font-medium">Push Image</p>
+              <p className="text-muted-foreground text-[10px]">to DockerHub</p>
+            </div>
+            <div className="p-3 bg-card border border-primary/20 text-center">
+              <p className="text-primary font-bold text-lg mb-1">4</p>
+              <p className="text-foreground font-medium">Deploy</p>
+              <p className="text-muted-foreground text-[10px]">to Minikube</p>
+            </div>
+          </div>
+          
+          {/* Docker Build Command */}
+          <div className="p-3 bg-card border border-border/30 font-mono text-xs text-center">
+            <span className="text-muted-foreground">Jenkins runs: </span>
+            <code className="text-primary">docker build -t sarika1731/autodeployx:&lt;build_number&gt; .</code>
+          </div>
+        </div>
+
+        {/* WHO DOES NOT BUILD IMAGES */}
+        <div className="max-w-4xl mx-auto mt-4 p-4 bg-destructive/5 border border-destructive/30">
+          <h3 className="font-display text-xs tracking-[0.15em] text-destructive mb-3 text-center">
+            ❌ WHO DOES NOT BUILD IMAGES
+          </h3>
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div className="p-3 bg-card border border-destructive/20 text-center">
+              <p className="text-destructive font-medium">❌ Backend</p>
+              <p className="text-muted-foreground text-[10px]">Only receives webhooks & broadcasts</p>
+            </div>
+            <div className="p-3 bg-card border border-destructive/20 text-center">
+              <p className="text-destructive font-medium">❌ Frontend</p>
+              <p className="text-muted-foreground text-[10px]">Only displays data & triggers</p>
+            </div>
+          </div>
+        </div>
+
         {/* Key Architecture Points */}
-        <div className="max-w-3xl mx-auto mt-8 p-6 bg-secondary/30 border border-border/30">
+        <div className="max-w-3xl mx-auto mt-6 p-6 bg-secondary/30 border border-border/30">
           <h3 className="font-display text-sm tracking-[0.15em] text-foreground mb-4 text-center">
             KEY ARCHITECTURE POINTS
           </h3>
