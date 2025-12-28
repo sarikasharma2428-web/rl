@@ -18,14 +18,18 @@ import {
 } from "./ui/select";
 import { useDockerImages } from "@/hooks/useMetrics";
 import { useManualDeploy } from "@/hooks/useWebSocket";
+import { useAutoDeployWebSocket } from "@/hooks/useWebSocket";
 import { toast } from "@/hooks/use-toast";
+import { TriggerPipelineDialog } from "./TriggerPipelineDialog";
 
 export function HeroSection() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [deploymentDialogOpen, setDeploymentDialogOpen] = useState(false);
+  const [pipelineDialogOpen, setPipelineDialogOpen] = useState(false);
   const [selectedTag, setSelectedTag] = useState<string>("");
   
   const { images, repository, loading: imagesLoading } = useDockerImages(30000);
   const { deployImage, isDeploying } = useManualDeploy();
+  const { isConnected } = useAutoDeployWebSocket();
 
   const handleDeploy = async () => {
     if (!selectedTag) {
@@ -43,7 +47,7 @@ export function HeroSection() {
         title: "Deployment Started",
         description: `Deploying ${repository}:${selectedTag} to Minikube`,
       });
-      setIsOpen(false);
+      setDeploymentDialogOpen(false);
       setSelectedTag("");
     } catch (error) {
       toast({
@@ -98,24 +102,45 @@ export function HeroSection() {
           Experience the power of fully automated infrastructure.
         </p>
 
-        {/* Deployment Button */}
-        <Button 
-          variant="glow" 
-          size="lg" 
-          className="tracking-[0.2em] uppercase"
-          onClick={() => setIsOpen(true)}
-        >
-          <Play className="w-4 h-4 mr-2" />
-          Deployment
-        </Button>
+        {/* Deployment Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <Button 
+            variant="glow" 
+            size="lg" 
+            className="tracking-[0.2em] uppercase"
+            onClick={() => setPipelineDialogOpen(true)}
+            disabled={!isConnected}
+            title={!isConnected ? "Backend not connected" : "Trigger full CI/CD pipeline"}
+          >
+            <Rocket className="w-4 h-4 mr-2" />
+            Trigger Pipeline
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="tracking-[0.2em] uppercase"
+            onClick={() => setDeploymentDialogOpen(true)}
+          >
+            <Play className="w-4 h-4 mr-2" />
+            Quick Deploy
+          </Button>
+        </div>
       </div>
 
+      {/* Trigger Pipeline Dialog */}
+      <TriggerPipelineDialog 
+        isOpen={pipelineDialogOpen}
+        onOpenChange={setPipelineDialogOpen}
+        isConnected={isConnected}
+      />
+
       {/* Manual Deployment Dialog */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={deploymentDialogOpen} onOpenChange={setDeploymentDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="font-display tracking-[0.1em]">
-              Manual Deployment
+              Quick Deploy
             </DialogTitle>
             <DialogDescription>
               Select a Docker image to deploy directly to Minikube without triggering the full pipeline.
@@ -156,7 +181,7 @@ export function HeroSection() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
+            <Button variant="outline" onClick={() => setDeploymentDialogOpen(false)}>
               Cancel
             </Button>
             <Button 

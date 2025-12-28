@@ -4,16 +4,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: autodeployx
-  namespace: autodeployx
+  name: autodeployx-app
+  namespace: default
   labels:
-    app: autodeployx
+    app: autodeployx-app
     version: v1
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: autodeployx
+      app: autodeployx-app
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       labels:
-        app: autodeployx
+        app: autodeployx-app
         version: v1
     spec:
       containers:
@@ -45,7 +45,7 @@ spec:
         # Liveness probe - restart if unhealthy
         livenessProbe:
           httpGet:
-            path: /health/live
+            path: /health
             port: 8000
           initialDelaySeconds: 30
           periodSeconds: 10
@@ -55,7 +55,7 @@ spec:
         # Readiness probe - remove from LB if not ready
         readinessProbe:
           httpGet:
-            path: /health/ready
+            path: /health
             port: 8000
           initialDelaySeconds: 5
           periodSeconds: 5

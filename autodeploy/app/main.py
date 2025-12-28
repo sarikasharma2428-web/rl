@@ -6,8 +6,10 @@ FastAPI application with health checks and deployment endpoints
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.health import router as health_router
+from routes.pipelines import router as pipelines_router
 from routes.deploy import router as deploy_router
 from services.worker import BackgroundWorker
+from services.jenkins import close_jenkins_client
 import uvicorn
 
 app = FastAPI(
@@ -27,6 +29,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(health_router, prefix="/health", tags=["Health"])
+app.include_router(pipelines_router, prefix="/pipelines", tags=["Pipelines"])
 app.include_router(deploy_router, prefix="/deploy", tags=["Deployment"])
 
 # Initialize background worker
@@ -42,6 +45,7 @@ async def startup_event():
 async def shutdown_event():
     """Cleanup on shutdown"""
     await worker.stop()
+    await close_jenkins_client()
     print("👋 AutoDeployX shutting down...")
 
 @app.get("/")

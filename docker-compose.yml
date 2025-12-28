@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./autodeploy
+      dockerfile: Dockerfile
+    container_name: autodeployx-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_USERNAME=${JENKINS_USERNAME:-admin}
+      - JENKINS_TOKEN=${JENKINS_TOKEN}
+      - DOCKER_IMAGE=${DOCKER_IMAGE:-sarika1731/autodeployx}
+      - DATABASE_URL=sqlite:///./autodeployx.db
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./autodeploy/app:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - jenkins
+    networks:
+      - autodeployx-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Jenkins CI/CD
+  jenkins:
+    image: jenkins/jenkins:latest
+    container_name: autodeployx-jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    environment:
+      - JENKINS_OPTS=-Dorg.jenkinsci.plugins.matrixauth.inheritance.InheritanceStrategy=net.sf.json.JSONNull
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+    networks:
+      - autodeployx-net
+    restart: unless-stopped
+
+  # PostgreSQL Database (optional, for production)
+  postgres:
+    image: postgres:15-alpine
+    container_name: autodeployx-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-autodeployx}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-autodeployx123}
+      POSTGRES_DB: ${POSTGRES_DB:-autodeployx}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - autodeployx-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autodeployx"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: autodeployx-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - autodeployx-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  jenkins_home:
+  postgres_data:
+  redis_data:
+
+networks:
+  autodeployx-net:
+    driver: bridge
