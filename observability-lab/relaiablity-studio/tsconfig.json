@@ -6,7 +6,12 @@
     "moduleResolution": "Node",
     "strict": true,
     "skipLibCheck": true,
-    "baseUrl": "src"
+    "baseUrl": "src",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

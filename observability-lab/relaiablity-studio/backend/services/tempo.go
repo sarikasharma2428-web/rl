@@ -1,7 +1,16 @@
 package services
 
+import (
+	"io"
+	"net/http"
+)
+
 func GetTraces() string {
-  resp, _ := http.Get("http://localhost:3200/api/search")
-  body, _ := io.ReadAll(resp.Body)
-  return string(body)
+	resp, err := http.Get("http://tempo:3200/api/search")
+	if err != nil {
+		return err.Error()
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	return string(body)
 }

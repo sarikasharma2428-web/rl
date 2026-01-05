@@ -47,3 +47,30 @@ services:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
     ports:
       - "9093:9093"
+
+  backend:
+    build: ./relaiablity-studio/backend
+    container_name: reliability-backend
+    ports:
+      - "9000:9000"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=sarika-reliability-studio-app
+    volumes:
+      - ./relaiablity-studio:/var/lib/grafana/plugins/reliability-studio
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+      - backend
